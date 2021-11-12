@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Kuroha.GUI.Editor;
@@ -236,12 +238,7 @@ namespace Kuroha.Util.Editor
             assetPaths = new List<string>();
 
             // 获取全部的 Renderer
-            #if UNITY_2021_1_OR_NEWER
             var renderers = UnityEngine.Object.FindObjectsOfType<Renderer>(true);
-            #else
-            var renderers = UnityEngine.Object.FindObjectsOfType<Renderer>();
-            #endif
-            
             if (renderers.IsNotNullAndEmpty())
             {
                 // 遍历 Renderer
@@ -263,13 +260,10 @@ namespace Kuroha.Util.Editor
                                     if (textures.Count > 0)
                                     {
                                         // 遍历纹理
-                                        foreach (var data in textures)
+                                        foreach (var data in textures.Where(data => ReferenceEquals(data.asset, null) == false))
                                         {
-                                            if (ReferenceEquals(data.asset, null) == false)
-                                            {
-                                                assets.Add(data.asset);
-                                                assetPaths.Add(data.path);
-                                            }
+                                            assets.Add(data.asset);
+                                            assetPaths.Add(data.path);
                                         }
                                     }
                                 }
@@ -312,13 +306,10 @@ namespace Kuroha.Util.Editor
                                     GetAllTexturesInMaterial(material, out var textures);
                                     if (textures.Count > 0)
                                     {
-                                        foreach (var data in textures)
+                                        foreach (var data in textures.Where(data => ReferenceEquals(data.asset, null) == false))
                                         {
-                                            if (ReferenceEquals(data.asset, null) == false)
-                                            {
-                                                assets.Add(data.asset);
-                                                assetPaths.Add(data.path);
-                                            }
+                                            assets.Add(data.asset);
+                                            assetPaths.Add(data.path);
                                         }
                                     }
                                 }
@@ -365,7 +356,7 @@ namespace Kuroha.Util.Editor
         public static void GetTexturesInMaterial(Material material, out List<TextureData> textureDataList)
         {
             textureDataList = new List<TextureData>();
-            var depends = EditorUtility.CollectDependencies(new Object[] { material });
+            var depends = EditorUtility.CollectDependencies(new UnityEngine.Object[] { material });
 
             foreach (var depend in depends)
             {
@@ -395,33 +386,36 @@ namespace Kuroha.Util.Editor
             
             // 直接以文本形式逐行读取 Material 文件 (这样才能读取到的冗余的纹理引用)
             var materialPathName = Path.GetFullPath(AssetDatabase.GetAssetPath(material));
-            using (var reader = new StreamReader(materialPathName))
+            if (materialPathName.IndexOf("Assets", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                var regex = new Regex(@"\s+guid:\s+(\w+),");
-                var line = reader.ReadLine();
-                while (line != null)
+                using (var reader = new StreamReader(materialPathName))
                 {
-                    // 包含纹理贴图引用的行
-                    if (line.Contains("m_Texture:"))
+                    var regex = new Regex(@"\s+guid:\s+(\w+),");
+                    var line = reader.ReadLine();
+                    while (line != null)
                     {
-                        // 使用正则表达式获取纹理贴图的 guid
-                        var match = regex.Match(line);
-                        if (match.Success)
+                        // 包含纹理贴图引用的行
+                        if (line.Contains("m_Texture:"))
                         {
-                            var guid = match.Groups[1].Value;
-                            var path = AssetDatabase.GUIDToAssetPath(guid);
-                            var asset = AssetDatabase.LoadAssetAtPath<Texture>(path);
-                    
-                            textureDataList.Add(new TextureData
+                            // 使用正则表达式获取纹理贴图的 guid
+                            var match = regex.Match(line);
+                            if (match.Success)
                             {
-                                asset = asset,
-                                path = path,
-                                guid = guid
-                            });
+                                var guid = match.Groups[1].Value;
+                                var path = AssetDatabase.GUIDToAssetPath(guid);
+                                var asset = AssetDatabase.LoadAssetAtPath<Texture>(path);
+                    
+                                textureDataList.Add(new TextureData
+                                {
+                                    asset = asset,
+                                    path = path,
+                                    guid = guid
+                                });
+                            }
                         }
-                    }
 
-                    line = reader.ReadLine();
+                        line = reader.ReadLine();
+                    }
                 }
             }
         }

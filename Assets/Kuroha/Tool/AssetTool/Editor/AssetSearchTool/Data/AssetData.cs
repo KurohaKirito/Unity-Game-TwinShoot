@@ -1,10 +1,10 @@
 ﻿using System.IO;
-using Kuroha.Tool.Release;
+using Kuroha.Util.RunTime;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.U2D;
 
-namespace Kuroha.Tool.Editor.AssetSearchTool.Data
+namespace Kuroha.Tool.AssetTool.Editor.AssetSearchTool.Data
 {
     public enum AssetType
     {
@@ -22,8 +22,8 @@ namespace Kuroha.Tool.Editor.AssetSearchTool.Data
         Shader,
         Scene
     }
-    
-    public class AssetData : ThreadPoolTool.ITask
+
+    public class AssetData : ThreadPoolUtil.ITask
     {
         /// <summary>
         /// 资源的相对路径
@@ -50,7 +50,8 @@ namespace Kuroha.Tool.Editor.AssetSearchTool.Data
         /// </summary>
         /// <param name="relativePath"></param>
         /// <param name="filePath"></param>
-        public AssetData(string relativePath, string filePath) {
+        public AssetData(string relativePath, string filePath)
+        {
             this.relativePath = relativePath;
             this.filePath = filePath;
         }
@@ -58,7 +59,8 @@ namespace Kuroha.Tool.Editor.AssetSearchTool.Data
         /// <summary>
         /// 读取资源的数据内容
         /// </summary>
-        public void Execute() {
+        public void Execute()
+        {
             if (isInit == false)
             {
                 fileContentText = File.ReadAllText(filePath);
@@ -74,7 +76,8 @@ namespace Kuroha.Tool.Editor.AssetSearchTool.Data
         /// <returns></returns>
         public static AssetType GetAssetType(UnityEngine.Object asset, string path)
         {
-            switch (asset) {
+            switch (asset)
+            {
                 case GameObject _:
                     return path.EndsWith(".FBX") ? AssetType.Model : AssetType.Prefab;
 

@@ -2,23 +2,19 @@
 using System.Collections.Generic;
 using System.IO;
 using Kuroha.GUI.Editor;
-using Kuroha.Tool.Editor.EffectCheckTool.ItemListView;
+using Kuroha.Tool.AssetTool.Editor.EffectCheckTool.ItemListView;
 using Kuroha.Util.RunTime;
 using UnityEditor;
 using UnityEngine;
 
-namespace Kuroha.Tool.Editor.EffectCheckTool.ItemSetView
+namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.ItemSetView
 {
     public static class EffectCheckItemSetView
     {
         /// <summary>
         /// 配置文件的路径
         /// </summary>
-        #if Kuroha
-        private static string ConfigFilePath => $"{Application.dataPath}/Kuroha/Config/EffectToolConfig.txt";
-        #else
-        private static string ConfigFilePath => $"{Application.dataPath}/Art/Effects/EffectToolConfig.txt";
-        #endif
+        private static string ConfigFilePath => $"{Application.dataPath}/Kuroha/Tool/AssetTool/Config/EffectToolConfig.txt";
         
         /// <summary>
         /// 危险等级

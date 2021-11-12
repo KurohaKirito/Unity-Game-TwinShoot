@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Kuroha.GUI.Editor;
-using Kuroha.Tool.Editor.EffectCheckTool.ItemListView;
-using Kuroha.Tool.Editor.EffectCheckTool.Report;
+using Kuroha.Tool.AssetTool.Editor.EffectCheckTool.ItemListView;
+using Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Report;
 using Kuroha.Util.RunTime;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Kuroha.Tool.Editor.EffectCheckTool.Check
+namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Check
 {
     public static class CheckModel
     {
@@ -49,7 +49,6 @@ namespace Kuroha.Tool.Editor.EffectCheckTool.Check
             if (itemData.path.StartsWith("Assets"))
             {
                 var assetGuids = AssetDatabase.FindAssets("t:Model", new[] { itemData.path });
-                // DebugUtil.Log($"CheckParticleSystem: 查询到了 {assetGuids.Length} 个模型, 检测路径为: {itemData.path}");
                 
                 for (var index = 0; index < assetGuids.Length; index++)
                 {

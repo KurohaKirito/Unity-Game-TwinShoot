@@ -1,10 +1,12 @@
 ﻿using System;
 using Kuroha.GUI.Editor.Splitter;
+using Kuroha.Tool.AssetTool.Editor.ProfilerTool.AsyncLoadTool;
+using Kuroha.Tool.AssetTool.Editor.ProfilerTool.MemoryTool;
 using Kuroha.Util.RunTime;
 using UnityEditor;
 using UnityEngine;
 
-namespace Kuroha.Tool.Editor.ProfilerTool
+namespace Kuroha.Tool.AssetTool.Editor.ProfilerTool.ProfilerTool
 {
     public static class ProfilerToolGUI
     {
@@ -13,7 +15,8 @@ namespace Kuroha.Tool.Editor.ProfilerTool
         /// </summary>
         public enum ToolType
         {
-            MemoryTool = 0
+            MemoryTool = 0,
+            AsyncLoadTool = 1,
         }
 
         /// <summary>
@@ -21,7 +24,8 @@ namespace Kuroha.Tool.Editor.ProfilerTool
         /// </summary>
         public static readonly string[] tools =
         {
-            "Memory 工具"
+            "Memory 工具",
+            "资源包同步加载时长统计"
         };
 
         /// <summary>
@@ -118,6 +122,10 @@ namespace Kuroha.Tool.Editor.ProfilerTool
                         ProfilerMemoryToolGUI.OnGUI();
                         break;
 
+                    case ToolType.AsyncLoadTool:
+                        LoadTimeRecordGUI.OnGUI();
+                        break;
+                    
                     default:
                         DebugUtil.LogError("忘记注册 OnGUI 事件了!");
                         throw new ArgumentOutOfRangeException();

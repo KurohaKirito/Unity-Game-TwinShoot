@@ -1,11 +1,11 @@
 ﻿using System;
-using Kuroha.Tool.Editor.EffectCheckTool.Check;
-using Kuroha.Tool.Editor.EffectCheckTool.GUI;
-using Kuroha.Tool.Editor.EffectCheckTool.ItemListView;
+using Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Check;
+using Kuroha.Tool.AssetTool.Editor.EffectCheckTool.GUI;
+using Kuroha.Tool.AssetTool.Editor.EffectCheckTool.ItemListView;
 using UnityEditor;
 using UnityEngine;
 
-namespace Kuroha.Tool.Editor.EffectCheckTool.ItemSetView
+namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.ItemSetView
 {
     /// <summary>
     /// 单个检查项设置页面
@@ -113,6 +113,18 @@ namespace Kuroha.Tool.Editor.EffectCheckTool.ItemSetView
                     textColor = EditorGUIUtility.isProSkin ? Color.white : Color.black
                 }
             };
+            
+            if (isEditMode == false)
+            {
+                ParameterString1 = default;
+                ParameterInt1 = default;
+                ParameterInt2 = default;
+                ParameterBool1 = default;
+                ParameterBool2 = default;
+                ParameterBool3 = default;
+                ParameterBool4 = default;
+            }
+            
             EffectCheckItemSetViewInit.Init(itemInfo, isEditMode);
         }
 
@@ -493,7 +505,16 @@ namespace Kuroha.Tool.Editor.EffectCheckTool.ItemSetView
                     ParameterString1 = EditorGUILayout.TextField("命名规则(正则)", ParameterString1);
                     itemInfo.parameter = ParameterString1;
                     UnityEngine.GUI.skin.label.alignment = TextAnchor.MiddleLeft;
-                    GUILayout.Label("描述: 命名规则检测");
+                    GUILayout.Label("描述: 资源命名规则检测");
+                    UnityEngine.GUI.skin.label.alignment = oldAlignment;
+                    break;
+
+                case CheckAsset.CheckOptions.FolderName:
+                    UnityEngine.GUI.skin.label.alignment = TextAnchor.MiddleLeft;
+                    ParameterString1 = EditorGUILayout.TextField("命名规则(正则)", ParameterString1);
+                    itemInfo.parameter = ParameterString1;
+                    UnityEngine.GUI.skin.label.alignment = TextAnchor.MiddleLeft;
+                    GUILayout.Label("描述: 文件夹命名规则检测");
                     UnityEngine.GUI.skin.label.alignment = oldAlignment;
                     break;
                 

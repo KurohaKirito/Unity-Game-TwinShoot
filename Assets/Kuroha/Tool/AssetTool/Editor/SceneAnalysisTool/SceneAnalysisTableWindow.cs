@@ -7,7 +7,7 @@ using Kuroha.Util.RunTime;
 using UnityEditor;
 using UnityEngine;
 
-namespace Kuroha.Tool.Editor.SceneAnalysisTool
+namespace Kuroha.Tool.AssetTool.Editor.SceneAnalysisTool
 {
     public class SceneAnalysisTableWindow : EditorWindow
     {
@@ -43,7 +43,7 @@ namespace Kuroha.Tool.Editor.SceneAnalysisTool
             isCollider = collider;
             isDetectCurrentScene = detectCurrentScene;
 
-            var window = GetWindow<SceneAnalysisTableWindow>(true);
+            var window = GetWindow<SceneAnalysisTableWindow>("场景分析", true);
             window.minSize = new Vector2(1000, 600);
             window.maxSize = new Vector2(1000, 600);
         }

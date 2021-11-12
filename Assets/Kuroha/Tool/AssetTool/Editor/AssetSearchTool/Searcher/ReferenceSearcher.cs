@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Kuroha.Tool.Editor.AssetSearchTool.Data;
-using Kuroha.Tool.Editor.AssetSearchTool.GUI;
-using Kuroha.Tool.Release;
+using Kuroha.Tool.AssetTool.Editor.AssetSearchTool.Data;
+using Kuroha.Tool.AssetTool.Editor.AssetSearchTool.GUI;
 using Kuroha.Util.RunTime;
 using UnityEditor;
 
-namespace Kuroha.Tool.Editor.AssetSearchTool.Searcher
+namespace Kuroha.Tool.AssetTool.Editor.AssetSearchTool.Searcher
 {
     /// <summary>
     /// 引用匹配器
@@ -28,7 +27,7 @@ namespace Kuroha.Tool.Editor.AssetSearchTool.Searcher
             {
                 // 清空旧的查询结果
                 references.Clear();
-                
+
                 // 初始化用来保存查询结果的数据
                 foreach (var guid in guids)
                 {
@@ -40,14 +39,19 @@ namespace Kuroha.Tool.Editor.AssetSearchTool.Searcher
                 tasks.AddRange(AssetDataManager.GetRawDataDictionary().Select(task => new MatchTask(guids, task)));
 
                 // 使用多线程启动任务, 并等待多线程执行完毕
-                var threadPool = new ThreadPoolTool(tasks);
-                while (threadPool.IsDone == false)
+                var threadPool = new ThreadPoolUtil(tasks);
+                while (true)
                 {
-                    var com = threadPool.completedTaskCount;
-                    var all = threadPool.taskCount;
-                    Kuroha.GUI.Editor.ProgressBar.DisplayProgressBar("资源引用分析工具", $"引用分析中: {com}/{all}", com, all);
+                    var cur = threadPool.CompletedTaskCount;
+                    var all = threadPool.TaskCount;
+                    if (threadPool.IsDone)
+                    {
+                        Kuroha.GUI.Editor.ProgressBar.DisplayProgressBar("资源引用分析工具", $"引用分析中: {cur}/{all}", cur, all);
+                        break;
+                    }
+
+                    System.Threading.Thread.Sleep(10);
                 }
-                EditorUtility.ClearProgressBar();
 
                 #region 遍历每一个任务中的查询结果, 并汇总到字典中
 

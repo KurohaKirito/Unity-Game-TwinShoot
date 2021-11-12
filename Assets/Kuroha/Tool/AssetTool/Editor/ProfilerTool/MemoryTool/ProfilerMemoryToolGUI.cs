@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
+using Kuroha.Tool.AssetTool.Editor.ProfilerTool.ProfilerTool;
 using UnityEditor;
 using UnityEditorInternal;
+using UnityEngine;
 
-namespace Kuroha.Tool.Editor.ProfilerTool
+namespace Kuroha.Tool.AssetTool.Editor.ProfilerTool.MemoryTool
 {
     public static class ProfilerMemoryToolGUI
     {
@@ -154,7 +155,7 @@ namespace Kuroha.Tool.Editor.ProfilerTool
             var texts = new List<string>(100);
 
             // 输出文件路径
-            var outputPath = $"C:/MemoryDetail_{DateTime.Now:yyyy_MM_dd_HH_mm_ss}.txt";
+            var outputPath = $"{Application.dataPath}/MemoryDetail_{DateTime.Now:yyyy_MM_dd_HH_mm_ss}.txt";
 
             // 获取到根节点
             profilerMemoryElementRoot = ProfilerWindow.GetMemoryDetailRoot(memDepth, memSize);

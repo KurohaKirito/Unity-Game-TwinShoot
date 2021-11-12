@@ -9,7 +9,7 @@ using Kuroha.Util.RunTime;
 using UnityEditor;
 using UnityEngine;
 
-namespace Kuroha.Tool.Editor.TextureAnalysisTool
+namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
 {
     public class TextureAnalysisTableWindow : EditorWindow
     {
@@ -61,7 +61,7 @@ namespace Kuroha.Tool.Editor.TextureAnalysisTool
             detectType = type;
             detectPath = path;
             detectGameObject = obj;
-            var window = GetWindow<TextureAnalysisTableWindow>(true);
+            var window = GetWindow<TextureAnalysisTableWindow>("纹理资源分析", true);
             window.minSize = new Vector2(1200, 1000);
             window.maxSize = new Vector2(1200, 1000);
         }

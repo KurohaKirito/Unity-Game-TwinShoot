@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using Kuroha.Tool.Editor.EffectCheckTool.ItemSetView;
-using Kuroha.Util.RunTime;
+using Kuroha.GUI.Editor;
+using Kuroha.Tool.AssetTool.Editor.EffectCheckTool.ItemSetView;
 using UnityEditor;
 using UnityEngine;
 
-namespace Kuroha.Tool.Editor.EffectCheckTool.Report
+namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Report
 {
     public class EffectCheckReportWindow : EditorWindow
     {
@@ -65,7 +65,8 @@ namespace Kuroha.Tool.Editor.EffectCheckTool.Report
         public static void Open(List<EffectCheckReportInfo> results)
         {
             EffectCheckReport.reportInfos = results;
-            GetWindow<EffectCheckReportWindow>("检测结果").minSize = new Vector2(1000, 650);
+            var window = GetWindow<EffectCheckReportWindow>("特效检测结果");
+            window.minSize = new Vector2(1000, 650);
         }
 
         /// <summary>
@@ -124,7 +125,7 @@ namespace Kuroha.Tool.Editor.EffectCheckTool.Report
 
             #region 全部问题列表 分页显示
 
-            Kuroha.GUI.Editor.PageManager.Pager(EffectCheckReport.reportInfos.Count, COUNT_PER_PAGE,
+            PageManager.Pager(EffectCheckReport.reportInfos.Count, COUNT_PER_PAGE,
                 ref curPage, out indexBegin, out indexEnd);
             
             scrollPos = EditorGUILayout.BeginScrollView(scrollPos, GUILayout.Height(position.height));

@@ -1,16 +1,17 @@
 ﻿using System;
 using Kuroha.GUI.Editor;
-using Kuroha.Tool.Editor.AssetBatchTool;
-using Kuroha.Tool.Editor.EffectCheckTool.GUI;
-using Kuroha.Tool.Editor.FashionAnalysisTool;
-using Kuroha.Tool.Editor.MeshAnalysisTool;
-using Kuroha.Tool.Editor.ProfilerTool;
-using Kuroha.Tool.Editor.SceneAnalysisTool;
-using Kuroha.Tool.Editor.TextureAnalysisTool;
+using Kuroha.Tool.AssetTool.Editor.AssetBatchTool;
+using Kuroha.Tool.AssetTool.Editor.AssetBatchTool.BatchGUI;
+using Kuroha.Tool.AssetTool.Editor.EffectCheckTool.GUI;
+using Kuroha.Tool.AssetTool.Editor.FashionAnalysisTool;
+using Kuroha.Tool.AssetTool.Editor.MeshAnalysisTool;
+using Kuroha.Tool.AssetTool.Editor.ProfilerTool.ProfilerTool;
+using Kuroha.Tool.AssetTool.Editor.SceneAnalysisTool;
+using Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool;
 using UnityEditor;
 using UnityEngine;
 
-namespace Kuroha.Tool.Editor.AssetCheckTool
+namespace Kuroha.Tool.AssetTool.Editor.AssetCheckTool
 {
     public class AssetCheckToolWindow : EditorWindow
     {
@@ -52,11 +53,6 @@ namespace Kuroha.Tool.Editor.AssetCheckTool
         /// <summary>
         /// 资源检测工具
         /// </summary>
-        #if Kuroha
-        [MenuItem("Kuroha/AssetTool")]
-        #else
-        [MenuItem("Funny/资源检测工具/Asset Check Tool")]
-        #endif
         public static void Open()
         {
             var window = GetWindow<AssetCheckToolWindow>("资源检测工具");
@@ -69,13 +65,9 @@ namespace Kuroha.Tool.Editor.AssetCheckTool
         /// </summary>
         private void OnEnable()
         {
-            toolBarNames = new[] {"特效资源检测", "时装检测工具", "场景统计分析", "贴图统计分析", "网格统计分析", "批处理", "Profiler 辅助"};
+            toolBarNames = new[] {"特效资源检测", "时装检测工具", "场景统计分析", "贴图统计分析", "预制体分析工具", "批处理", "性能分析辅助"};
             
-            #if UNITY_2019_3_OR_NEWER
             toolbarData = new Toolbar.ToolbarData(800, 320, toolBarNames);
-            #else
-            toolbarData = new Toolbar.ToolbarData(800, 16, toolBarNames);
-            #endif
             
             titleStyle = new GUIStyle
             {
@@ -106,7 +98,6 @@ namespace Kuroha.Tool.Editor.AssetCheckTool
                 SceneAnalysisGUI.OnGUI,
                 TextureAnalysisGUI.OnGUI,
                 MeshAnalysisToolGUI.OnGUI,
-                //ParticleSystemProfiler.OnGUI,
                 () =>
                 {
                     AssetBatchToolGUI.OnGUI(this);
@@ -131,7 +122,6 @@ namespace Kuroha.Tool.Editor.AssetCheckTool
         /// </summary>
         private void OnGUI()
         {
-            CheckLabelAlignment();
             GUILayout.BeginVertical();
             
             // draw the title
@@ -147,18 +137,6 @@ namespace Kuroha.Tool.Editor.AssetCheckTool
             GUILayout.Space(2 * UI_DEFAULT_MARGIN);
             toolbarData.boxRectHeight = position.height;
             toolBarIndex = Toolbar.ToolbarAnime(ref toolbarData, this, ref toolBarIndex, actions);
-        }
-
-        /// <summary>
-        /// 检查 Label 对齐方式
-        /// </summary>
-        [System.Diagnostics.Conditional("UNITY_2018_4_1")]
-        private static void CheckLabelAlignment()
-        {
-            if (UnityEngine.GUI.skin.label.alignment != TextAnchor.MiddleLeft)
-            {
-                UnityEngine.GUI.skin.label.alignment = TextAnchor.MiddleLeft;
-            }
         }
     }
 }

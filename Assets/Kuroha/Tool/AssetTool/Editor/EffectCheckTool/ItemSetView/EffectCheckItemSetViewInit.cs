@@ -1,9 +1,9 @@
 ﻿using System;
-using Kuroha.Tool.Editor.EffectCheckTool.Check;
-using Kuroha.Tool.Editor.EffectCheckTool.GUI;
-using Kuroha.Tool.Editor.EffectCheckTool.ItemListView;
+using Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Check;
+using Kuroha.Tool.AssetTool.Editor.EffectCheckTool.GUI;
+using Kuroha.Tool.AssetTool.Editor.EffectCheckTool.ItemListView;
 
-namespace Kuroha.Tool.Editor.EffectCheckTool.ItemSetView
+namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.ItemSetView
 {
     /// <summary>
     /// 初始化类
@@ -270,6 +270,11 @@ namespace Kuroha.Tool.Editor.EffectCheckTool.ItemSetView
                 case CheckAsset.CheckOptions.AssetName:
                     var parameterAssetName = info.parameter;
                     EffectCheckItemSetViewWindow.ParameterString1 = parameterAssetName;
+                    break;
+
+                case CheckAsset.CheckOptions.FolderName:
+                    var parameterFolderName = info.parameter;
+                    EffectCheckItemSetViewWindow.ParameterString1 = parameterFolderName;
                     break;
                 
                 default:
