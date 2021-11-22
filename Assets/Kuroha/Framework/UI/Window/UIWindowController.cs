@@ -5,7 +5,7 @@ namespace Kuroha.Framework.UI.Window
     /// <summary>
     /// 抽象类, 所有 Controller 层的父类
     /// </summary>
-    public class UIWindowController
+    public abstract class UIWindowController
     {
         /// <summary>
         /// View 层
@@ -42,7 +42,7 @@ namespace Kuroha.Framework.UI.Window
         /// </summary>
         protected static void OnButtonClick_Close()
         {
-            Kuroha.Framework.UI.Manager.UIManager.UI.Window.Close();
+            Kuroha.Framework.UI.Manager.UIManager.Instance.Window.Close();
         }
 
         /// <summary>
