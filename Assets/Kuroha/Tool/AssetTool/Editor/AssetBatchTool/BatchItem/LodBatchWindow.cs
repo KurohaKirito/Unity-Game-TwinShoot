@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Kuroha.Tool.AssetTool.Editor.AssetBatchTool.BatchItem
 {
-    public class LodWindow: EditorWindow
+    public class LodBatchWindow: EditorWindow
     {
         /// <summary>
         /// 全局默认 margin
@@ -45,7 +45,7 @@ namespace Kuroha.Tool.AssetTool.Editor.AssetBatchTool.BatchItem
         public static void Open()
         {
             RefreshSelection();
-            GetWindow<LodWindow>("LodGroup 百分比设置");
+            GetWindow<LodBatchWindow>("LodGroup 百分比设置");
         }
 
         private void OnSelectionChange()
