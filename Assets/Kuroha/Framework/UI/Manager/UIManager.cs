@@ -13,12 +13,8 @@ namespace Kuroha.Framework.UI.Manager
         /// <summary>
         /// 单例
         /// </summary>
-        public static UIManager Instance
-        {
-            get => (UIManager)InstanceBase;
-            set => InstanceBase = value;
-        }
-        
+        public static UIManager Instance => InstanceBase as UIManager;
+
         /// <summary>
         /// Panel Manager
         /// </summary>
@@ -54,7 +50,7 @@ namespace Kuroha.Framework.UI.Manager
         /// <summary>
         /// 单例
         /// </summary>
-        private void Awake()
+        private void Start()
         {
             if (ReferenceEquals(panelParent, null) == false && ReferenceEquals(windowParent, null) == false)
             {
