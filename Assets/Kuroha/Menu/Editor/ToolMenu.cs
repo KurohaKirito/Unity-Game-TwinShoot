@@ -3,6 +3,7 @@ using Kuroha.Tool.AssetTool.Editor.AssetBatchTool.BatchItem;
 using Kuroha.Tool.AssetTool.Editor.AssetCheckTool;
 using Kuroha.Tool.AssetTool.Editor.AssetSearchTool.GUI;
 using Kuroha.Tool.AssetTool.Editor.AssetSearchTool.Searcher;
+using Kuroha.Tool.AssetTool.Editor.EffectCheckTool.GUI;
 using Kuroha.Tool.AssetViewer.Editor;
 using UnityEditor;
 
@@ -22,6 +23,18 @@ namespace Kuroha.Menu.Editor
         public static bool OpenDebugLogValidate()
         {
             return Kuroha.Util.RunTime.DebugUtil.LogEnable == false;
+        }
+        
+        [MenuItem("Kuroha/日志/关闭", false, 0)]
+        public static void CloseDebugLog()
+        {
+            Kuroha.Util.RunTime.DebugUtil.LogEnable = false;
+        }
+        
+        [MenuItem("Kuroha/日志/关闭", true, 0)]
+        public static bool CloseDebugLogValidate()
+        {
+            return Kuroha.Util.RunTime.DebugUtil.LogEnable;
         }
 
         #endregion
@@ -95,6 +108,12 @@ namespace Kuroha.Menu.Editor
         public static void AssetSearchTool()
         {
             AssetSearchWindow.Open(0);
+        }
+        
+        [MenuItem("Kuroha/Aircraft Check Tool", false, 60)]
+        public static void AircraftCheckTool()
+        {
+            EffectCheckToolGUI.Detect(false, "飞高高产出检测工具");
         }
         
         #endregion
