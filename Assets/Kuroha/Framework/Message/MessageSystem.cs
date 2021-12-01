@@ -10,105 +10,83 @@ namespace Kuroha.Framework.Message
     /// </summary>
     public class MessageSystem : Singleton<MessageSystem>
     {
-        /// <summary>
-        /// 单例
-        /// </summary>
-        public static MessageSystem Instance => InstanceBase as MessageSystem;
+        #region 编辑器 API
 
+        #if UNITY_EDITOR
+        
+        [System.Serializable]
+        public struct MessageListener
+        {
+            public string messageTypeName;
+            
+            [SerializeField]
+            public List<string> listenerList;
+        }
+        
+        [Header("消息系统的最大单帧处理时长")]
+        [SerializeField]
+        private float maxQueueProcessTime;
+        
+        [Header("当前的消息及监听者列表")]
+        [SerializeField]
+        private List<MessageListener> messageListenerList;
+        
+        private void OnGUI()
+        {
+            maxQueueProcessTime = MAX_QUEUE_PROCESS_TIME;
+            
+            messageListenerList ??= new List<MessageListener>();
+            
+            messageListenerList.Clear();
+            foreach (var key in listenerDic.Keys)
+            {
+                var val = new MessageListener {
+                    messageTypeName = key
+                };
+
+                var valList = new List<string>();
+                foreach (var handlers in listenerDic[key]) {
+                    var methodFullName = $"{handlers.Target.GetType().FullName}.{handlers.Method.Name}()";
+                    valList.Add(methodFullName);
+                }
+
+                val.listenerList = valList;
+                messageListenerList.Add(val);
+            }
+        }
+        
+        #endif
+        
+        #endregion
+        
         /// <summary>
         /// 消息处理器
         /// 返回终止处理标志: 禁止后续处理返回 true, 允许后续处理返回 false.
         /// </summary>
         public delegate bool MessageHandler(BaseMessage message);
-
+        
+        /// <summary>
+        /// 单例
+        /// </summary>
+        public static MessageSystem Instance => InstanceBase as MessageSystem;
+        
         /// <summary>
         /// 监听字典
         /// </summary>
         private readonly Dictionary<string, List<MessageHandler>> listenerDic = new Dictionary<string, List<MessageHandler>>();
-
-        #region 内部 API
-
-        /// <summary>
-        /// 注册监听
-        /// </summary>
-        /// <param name="handler"></param>
-        /// <returns>成功标志</returns>
-        private bool AddListener<T>(MessageHandler handler) where T : BaseMessage
-        {
-            var flag = false;
-
-            var msgName = typeof(T).Name;
-            if (listenerDic.ContainsKey(msgName) == false)
-            {
-                listenerDic.Add(msgName, new List<MessageHandler>());
-            }
-
-            var listenerList = listenerDic[msgName];
-            if (listenerList.Contains(handler) == false)
-            {
-                listenerList.Add(handler);
-                flag = true;
-            }
-
-            return flag;
-        }
-
-        /// <summary>
-        /// 移除监听
-        /// </summary>
-        /// <param name="handler"></param>
-        /// <returns>成功标志</returns>
-        private bool RemoveListener<T>(MessageHandler handler)
-        {
-            var flag = false;
-
-            var msgName = typeof(T).Name;
-            if (listenerDic.ContainsKey(msgName) == false)
-            {
-                DebugUtil.LogError($"全局消息系统: 监听移除失败, 因为此消息 {msgName} 当前没有任何监听者, 请排查错误!", null, "red");
-            }
-
-            var listenerList = listenerDic[msgName];
-            if (listenerList.Contains(handler) == false)
-            {
-                DebugUtil.LogError($"全局消息系统: 监听移除失败, 因为待移除的监听器并没有监听该类型的消息 {msgName}!", null, "red");
-            }
-            else
-            {
-                listenerList.Remove(handler);
-                flag = true;
-            }
-
-            return flag;
-        }
-
-        /// <summary>
-        /// 消息队列
-        /// </summary>
-        private readonly Queue<BaseMessage> messageQueue = new Queue<BaseMessage>();
-
-        /// <summary>
-        /// 消息入队
-        /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        private bool EnqueueMessage(BaseMessage message)
-        {
-            var flag = false;
-            if (messageQueue.Contains(message) == false)
-            {
-                messageQueue.Enqueue(message);
-                flag = true;
-            }
-
-            return flag;
-        }
 
         /// <summary>
         /// 消息队列的最大处理时长
         /// </summary>
         private const float MAX_QUEUE_PROCESS_TIME = 0.16667f;
 
+        /// <summary>
+        /// 消息队列
+        /// </summary>
+        private readonly Queue<BaseMessage> messageQueue = new Queue<BaseMessage>();
+        
+        #region 内部 API
+        
         /// <summary>
         /// 帧更新
         /// </summary>
@@ -129,6 +107,23 @@ namespace Kuroha.Framework.Message
                     timer += Time.deltaTime;
                 }
             }
+        }
+        
+        /// <summary>
+        /// 消息入队
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        private bool EnqueueMessage(BaseMessage message)
+        {
+            var flag = false;
+            if (messageQueue.Contains(message) == false)
+            {
+                messageQueue.Enqueue(message);
+                flag = true;
+            }
+
+            return flag;
         }
 
         /// <summary>
@@ -170,34 +165,71 @@ namespace Kuroha.Framework.Message
         #endregion
 
         #region 对外 API
-
+        
         /// <summary>
-        /// 注册
+        /// 注册监听
         /// </summary>
-        public bool Register<T>(MessageHandler handler) where T : BaseMessage
+        /// <param name="handler"></param>
+        /// <returns>成功标志</returns>
+        public bool AddListener<T>(MessageHandler handler) where T : BaseMessage
         {
-            return AddListener<T>(handler);
+            var flag = false;
+
+            var msgName = typeof(T).Name;
+            if (listenerDic.ContainsKey(msgName) == false)
+            {
+                listenerDic.Add(msgName, new List<MessageHandler>());
+            }
+
+            var listenerList = listenerDic[msgName];
+            if (listenerList.Contains(handler) == false)
+            {
+                listenerList.Add(handler);
+                flag = true;
+            }
+
+            return flag;
         }
 
         /// <summary>
-        /// 注销
+        /// 移除监听
         /// </summary>
-        public bool Unregister<T>(MessageHandler handler) where T : BaseMessage
+        /// <param name="handler"></param>
+        /// <returns>成功标志</returns>
+        public bool RemoveListener<T>(MessageHandler handler) where T : BaseMessage
         {
-            return RemoveListener<T>(handler);
+            var flag = false;
+
+            var msgName = typeof(T).Name;
+            if (listenerDic.ContainsKey(msgName) == false)
+            {
+                DebugUtil.LogError($"全局消息系统: 监听移除失败, 因为此消息 {msgName} 当前没有任何监听者, 请排查错误!", null, "red");
+            }
+
+            var listenerList = listenerDic[msgName];
+            if (listenerList.Contains(handler) == false)
+            {
+                DebugUtil.LogError($"全局消息系统: 监听移除失败, 因为待移除的监听器并没有监听该类型的消息 {msgName}!", null, "red");
+            }
+            else
+            {
+                listenerList.Remove(handler);
+                flag = true;
+            }
+
+            return flag;
         }
 
         /// <summary>
-        /// 向消息系统发送一条消息
+        /// 向消息系统发送一条消息 (将当前消息排队到消息队列, 等待处理)
         /// </summary>
-        /// <returns></returns>
         public bool Send(BaseMessage msg)
         {
             return EnqueueMessage(msg);
         }
 
         /// <summary>
-        /// 向消息系统请求一条消息
+        /// 向消息系统请求一条消息 (插队, 立即处理当前消息)
         /// </summary>
         /// <returns></returns>
         public bool Request(BaseMessage msg)
