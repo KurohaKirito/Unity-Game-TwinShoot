@@ -6,6 +6,14 @@ namespace UI.UI_Title
     {
         private UI_Title_View View => baseView as UI_Title_View;
         
-        
+        /// <summary>
+        /// 初始化
+        /// </summary>
+        public sealed override void Init(in UIPanelView view, in string prefabName)
+        {
+            base.Init(view, prefabName);
+            
+            Reset();
+        }
     }
 }
