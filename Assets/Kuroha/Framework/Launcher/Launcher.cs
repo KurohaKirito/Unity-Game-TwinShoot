@@ -7,34 +7,20 @@ namespace Kuroha.Framework.Launcher
     public class Launcher : MonoBehaviour
     {
         /// <summary>
-        /// 启动器队列
+        /// 启动器列表
         /// </summary>
-        private Queue<ILauncher> launcherQueue;
+        private List<ILauncher> launcherList;
 
         /// <summary>
         /// 启动游戏
         /// </summary>
         private void Start()
         {
-            InitLauncher();
-            RegisterLauncher();
-            LauncherComponent();
-        }
-
-        /// <summary>
-        /// 初始化启动器
-        /// </summary>
-        private void InitLauncher()
-        {
-            launcherQueue ??= new Queue<ILauncher>();
-        }
-
-        /// <summary>
-        /// 注册需要启动的组件
-        /// </summary>
-        private void RegisterLauncher()
-        {
-            launcherQueue.Enqueue(new AsyncLoadScene());
+            launcherList ??= new List<ILauncher>();
+            
+            launcherList.Add(new AsyncLoadScene());
+            
+            Invoke(nameof(LauncherComponent), 0.5f);
         }
 
         /// <summary>
@@ -42,10 +28,19 @@ namespace Kuroha.Framework.Launcher
         /// </summary>
         private void LauncherComponent()
         {
-            while (launcherQueue.Count > 0)
+            foreach (var launcher in launcherList)
             {
-                launcherQueue.Dequeue().OnLauncher();
+                launcher.OnLaunch();
             }
+        }
+
+        /// <summary>
+        /// 清空内存
+        /// </summary>
+        private void OnDestroy()
+        {
+            launcherList.Clear();
+            launcherList = null;
         }
     }
 }

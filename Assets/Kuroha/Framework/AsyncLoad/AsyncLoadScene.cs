@@ -8,8 +8,11 @@ namespace Kuroha.Framework.AsyncLoad
 {
     /// <summary>
     /// 协程实现异步加载场景
+    ///
+    /// Load() 方法使用消息系统进行触发
+    /// 
     /// </summary>
-    public class AsyncLoadScene : IUpdateable, ILauncher
+    public class AsyncLoadScene : IUpdater, ILauncher
     {
         /// <summary>
         /// 计时器
@@ -25,7 +28,7 @@ namespace Kuroha.Framework.AsyncLoad
         /// 正在加载的场景的路径
         /// </summary>
         private string scenePath;
-        
+
         /// <summary>
         /// 异步加载进程
         /// </summary>
@@ -34,9 +37,28 @@ namespace Kuroha.Framework.AsyncLoad
         /// <summary>
         /// 初始化
         /// </summary>
-        public void OnLauncher()
+        public void OnLaunch()
         {
             MessageSystem.Instance.AddListener<AsyncLoadSceneMessage>(Load);
+        }
+
+        /// <summary>
+        /// 开始加载
+        /// </summary>
+        private bool Load(BaseMessage message)
+        {
+            // 转换消息类型
+            if (message is AsyncLoadSceneMessage async)
+            {
+                ResetAsyncLoad(async.minLoadTime);
+                scenePath = async.path;
+
+                asyncOperation = SceneManager.LoadSceneAsync(scenePath);
+                asyncOperation.allowSceneActivation = false;
+                Updater.Updater.Instance.Register(this);
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -64,24 +86,14 @@ namespace Kuroha.Framework.AsyncLoad
 
             return false;
         }
-        
-        /// <summary>
-        /// 开始加载
-        /// </summary>
-        private bool Load(BaseMessage message)
-        {
-            // 转换消息类型
-            if (message is AsyncLoadSceneMessage async)
-            {
-                ResetAsyncLoad(async.minLoadTime);
-                scenePath = async.path;
-                
-                asyncOperation = SceneManager.LoadSceneAsync(scenePath);
-                asyncOperation.allowSceneActivation = false;
-                Updater.Updater.Instance.Register(this);
-            }
 
-            return true;
+        /// <summary>
+        /// 清理
+        /// </summary>
+        private void Clear()
+        {
+            ResetAsyncLoad(0);
+            Updater.Updater.Instance.Unregister(this);
         }
 
         /// <summary>
@@ -93,15 +105,6 @@ namespace Kuroha.Framework.AsyncLoad
             minLoadTime = min;
             scenePath = default;
             asyncOperation = null;
-        }
-
-        /// <summary>
-        /// 清理
-        /// </summary>
-        private void Clear()
-        {
-            ResetAsyncLoad(0);
-            Updater.Updater.Instance.Unregister(this);
         }
     }
 }

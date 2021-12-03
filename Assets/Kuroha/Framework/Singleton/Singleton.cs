@@ -1,3 +1,4 @@
+using Kuroha.Framework.Launcher;
 using Kuroha.Util.RunTime;
 using UnityEngine;
 
@@ -7,13 +8,13 @@ namespace Kuroha.Framework.Singleton
     /// 单例基类
     /// 每个单例首次访问时都会进行合法性验证, 仅在编辑器内验证, 发布后不进行验证
     /// </summary>
-    public class Singleton<T> : MonoBehaviour where T : Singleton<T>
+    public class Singleton<T> : MonoBehaviour, ILauncher where T : Singleton<T>
     {
         /// <summary>
         /// 单例活动标志
         /// </summary>
         private bool active = true;
-        
+
         /// <summary>
         /// 单例
         /// </summary>
@@ -30,41 +31,48 @@ namespace Kuroha.Framework.Singleton
                 if (ReferenceEquals(instanceBase, null))
                 {
                     // 判断是否需要新建单例物体
-                    if (IsNeedCreateSingleton())
+                    if (IsNeedCreateSingleton(out var script))
                     {
                         // 在场景中创建单例物体
-                        CreateSingleton();
+                        script = CreateSingleton();
                     }
+
+                    script.OnLaunch();
                 }
-                
+
                 return instanceBase;
             }
-            
-            set => instanceBase = value as T;
         }
+        
+        /// <summary>
+        /// 单例活动标志
+        /// </summary>
+        public static bool IsActive => ReferenceEquals(instanceBase, null) == false && InstanceBase.active;
 
         /// <summary>
         /// 检测场景中的单例
         /// </summary>
-        private static bool IsNeedCreateSingleton()
+        private static bool IsNeedCreateSingleton(out T script)
         {
+            script = null;
             var toCreate = false;
-            
+
             var components = FindObjectsOfType<T>();
-            
+
             // 场景中没有预先创建此单例
             if (components.Length == 0)
             {
                 toCreate = true;
             }
-            
+
             // 场景中预先创建了此单例
             else if (components.Length == 1)
             {
                 instanceBase = components[0];
                 DontDestroyOnLoad(instanceBase);
+                script = instanceBase;
             }
-            
+
             // 错误, 场景中预先创建了多个此单例
             else if (components.Length > 1)
             {
@@ -73,31 +81,36 @@ namespace Kuroha.Framework.Singleton
                 {
                     Destroy(component);
                 }
+
                 toCreate = true;
             }
-            
+
             return toCreate;
         }
 
         /// <summary>
         /// 创建一个单例
         /// </summary>
-        private static void CreateSingleton()
+        private static T CreateSingleton()
         {
             var gameObject = new GameObject($"Singleton_{typeof(T).Name}", typeof(T));
             instanceBase = gameObject.GetComponent<T>();
             DontDestroyOnLoad(instanceBase);
+
+            return instanceBase;
         }
 
         /// <summary>
-        /// 单例活动标志
+        /// 初始化
         /// </summary>
-        public static bool IsActive => ReferenceEquals(instanceBase, null) == false && InstanceBase.active;
+        public virtual void OnLaunch()
+        {
+        }
 
         /// <summary>
         /// 销毁
         /// </summary>
-        private void OnDestroy()
+        protected virtual void OnDestroy()
         {
             active = false;
         }
@@ -105,7 +118,7 @@ namespace Kuroha.Framework.Singleton
         /// <summary>
         /// 隐藏
         /// </summary>
-        private void OnApplicationQuit()
+        protected virtual void OnApplicationQuit()
         {
             active = false;
         }

@@ -2,9 +2,8 @@ using Kuroha.Framework.Message;
 
 namespace Kuroha.Framework.Updater
 {
-    public interface IUpdateable
+    public interface IUpdater
     {
         public bool OnUpdate(BaseMessage message);
     }
 }
-
