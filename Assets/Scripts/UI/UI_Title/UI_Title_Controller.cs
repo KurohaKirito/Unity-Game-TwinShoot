@@ -1,4 +1,5 @@
 using Kuroha.Framework.UI.Panel;
+using Kuroha.Util.RunTime;
 
 namespace UI.UI_Title
 {
@@ -14,6 +15,16 @@ namespace UI.UI_Title
             base.Init(view, prefabName);
             
             Reset();
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+            
+            UGUIButtonUtil.AddListener(View.startGame, () =>
+            {
+                DebugUtil.Log("点击了开始游戏按钮!", null, "green");
+            });
         }
     }
 }
