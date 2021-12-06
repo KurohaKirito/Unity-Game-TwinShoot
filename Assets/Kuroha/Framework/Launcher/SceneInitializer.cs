@@ -7,9 +7,20 @@ namespace Kuroha.Framework.Launcher
     /// </summary>
     public class SceneInitializer : MonoBehaviour
     {
+        /// <summary>
+        /// 初始化
+        /// </summary>
         private void Start()
         {
-            Invoke(nameof(SceneInit), 0.5f);
+            Invoke(nameof(Init), 0.5f);
+        }
+
+        /// <summary>
+        /// 初始化
+        /// </summary>
+        private void Init()
+        {
+            SceneInit();
         }
 
         /// <summary>

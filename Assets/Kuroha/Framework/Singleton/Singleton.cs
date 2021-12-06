@@ -105,6 +105,7 @@ namespace Kuroha.Framework.Singleton
         /// </summary>
         public virtual void OnLaunch()
         {
+            // ...
         }
 
         /// <summary>
