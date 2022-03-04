@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Kuroha.Framework.AsyncLoad.Asset;
 using Kuroha.Util.RunTime;
-using UnityEditor;
 using UnityEngine;
 
 namespace Kuroha.Framework.Audio
@@ -25,10 +25,10 @@ namespace Kuroha.Framework.Audio
 
         public void InspectorUpdate()
         {
-            if (singleClipList.IsNullOrEmpty())
+            singleClipList ??= new List<Kuroha.Framework.Audio.SingleClip>();
+            
+            if (singleClipList.Count <= 0)
             {
-                singleClipList = new List<Kuroha.Framework.Audio.SingleClip>();
-
                 foreach (var singleClip in singleClipDic.Values)
                 {
                     singleClipList.Add(singleClip);
@@ -62,23 +62,24 @@ namespace Kuroha.Framework.Audio
         /// <summary>
         /// [Async] 初始化, 读取所有的 SingleClip
         /// </summary>
-        public async Task OnInit()
+        public async Task InitAsync()
         {
-            var guids = AssetDatabase.FindAssets($"t:{nameof(SingleClip)}", new[]
-            {
-                "Assets/Resources/DataBase/Audio/"
-            });
-            
-            foreach (var guid in guids)
-            {
-                var assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                assetPath = assetPath.Replace("Assets/Resources/", "").Replace(".asset", "");
-                var singleClipRequest = Resources.LoadAsync<SingleClip>(assetPath);
-                await singleClipRequest;
+            var request = Resources.LoadAsync<DS_Asset>("Configs/Assets/Audios");
+            await request;
 
-                if (singleClipRequest.asset is SingleClip singleClip)
+            if (request.asset is DS_Asset asset)
+            {
+                var paths = asset.assetPaths;
+                foreach (var path in paths)
                 {
-                    singleClipDic[singleClip.id] = singleClip;
+                    var assetPath = path.Replace("Assets/Resources/", "").Replace(".asset", "");
+                    var singleClipRequest = Resources.LoadAsync<SingleClip>(assetPath);
+                    await singleClipRequest;
+
+                    if (singleClipRequest.asset is SingleClip singleClip)
+                    {
+                        singleClipDic[singleClip.id] = singleClip;
+                    }
                 }
             }
         }

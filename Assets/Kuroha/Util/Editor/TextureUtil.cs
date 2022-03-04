@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Kuroha.GUI.Editor;
-using Kuroha.Util.RunTime;
 using UnityEditor;
 using UnityEngine;
 
@@ -107,7 +106,7 @@ namespace Kuroha.Util.Editor
             while (samplePoints.Count > 0 && sampleCountMax > 0 && iterateMax-- > 0)
             {
                 // 在这些点中随便选一个采样点
-                var next = (int)Mathf.Lerp(0, samplePoints.Count - 1, UnityEngine.Random.value);
+                var next = (int) Mathf.Lerp(0, samplePoints.Count - 1, UnityEngine.Random.value);
                 var sample = samplePoints[next];
 
                 // 定义 "是否找到临近分布点" 标志
@@ -170,6 +169,32 @@ namespace Kuroha.Util.Editor
         }
 
         /// <summary>
+        /// 获取纹理导入设置的图片压缩格式 (Default)
+        /// </summary>
+        public static void GetTextureFormatDefault(TextureImporter textureImporter, out TextureImporterFormat format)
+        {
+            format = textureImporter.GetDefaultPlatformTextureSettings().format;
+        }
+
+        /// <summary>
+        /// 获取纹理导入设置的图片压缩格式 (Android)
+        /// </summary>
+        public static bool GetTextureFormatAndroid(TextureImporter textureImporter, out TextureImporterFormat format)
+        {
+            // 参数名可选: "Standalone", "Web", "iPhone", "Android", "WebGL", "Windows Store Apps", "PS4", "XboxOne", "Nintendo Switch", "tvOS".
+            return textureImporter.GetPlatformTextureSettings("Android", out _, out format);
+        }
+
+        /// <summary>
+        /// 获取纹理导入设置的图片压缩格式 (iPhone)
+        /// </summary>
+        public static bool GetTextureFormatIPhone(TextureImporter textureImporter, out TextureImporterFormat format)
+        {
+            // 参数名可选: "Standalone", "Web", "iPhone", "Android", "WebGL", "Windows Store Apps", "PS4", "XboxOne", "Nintendo Switch", "tvOS".
+            return textureImporter.GetPlatformTextureSettings("iPhone", out _, out format);
+        }
+
+        /// <summary>
         /// 获取 Unity 纹理的原始尺寸
         /// </summary>
         /// <param name="textureImporter"></param>
@@ -184,12 +209,12 @@ namespace Kuroha.Util.Editor
                 return;
             }
 
-            var args = new object[] { 0, 0 };
+            var args = new object[] {0, 0};
             var method = typeof(TextureImporter).GetMethod("GetWidthAndHeight", BindingFlags.NonPublic | BindingFlags.Instance);
             method?.Invoke(textureImporter, args);
 
-            originWidth = (int)args[0];
-            originHeight = (int)args[1];
+            originWidth = (int) args[0];
+            originHeight = (int) args[1];
         }
 
         /// <summary>
@@ -239,7 +264,7 @@ namespace Kuroha.Util.Editor
 
             // 获取全部的 Renderer
             var renderers = UnityEngine.Object.FindObjectsOfType<Renderer>(true);
-            if (renderers.IsNotNullAndEmpty())
+            if (renderers != null)
             {
                 // 遍历 Renderer
                 foreach (var renderer in renderers)
@@ -248,7 +273,7 @@ namespace Kuroha.Util.Editor
                     {
                         // 获取全部的材质
                         var materials = renderer.sharedMaterials;
-                        if (materials.IsNotNullAndEmpty())
+                        if (materials != null)
                         {
                             // 遍历材质
                             foreach (var material in materials)
@@ -288,7 +313,7 @@ namespace Kuroha.Util.Editor
 
             // 获取全部的 Renderer
             var renderers = gameObject.GetComponentsInChildren<Renderer>(true);
-            if (renderers.IsNotNullAndEmpty())
+            if (renderers != null)
             {
                 foreach (var renderer in renderers)
                 {
@@ -296,7 +321,7 @@ namespace Kuroha.Util.Editor
                     {
                         // 获取全部的材质
                         var materials = renderer.sharedMaterials;
-                        if (materials.IsNotNullAndEmpty())
+                        if (materials != null)
                         {
                             foreach (var material in materials)
                             {
@@ -334,7 +359,7 @@ namespace Kuroha.Util.Editor
 
             // 获取路径下全部纹理的 guids
             var guids = AssetDatabase.FindAssets("t:Texture", paths);
-            if (guids.IsNotNullAndEmpty())
+            if (guids != null)
             {
                 for (var i = 0; i < guids.Length; i++)
                 {
@@ -356,7 +381,7 @@ namespace Kuroha.Util.Editor
         public static void GetTexturesInMaterial(Material material, out List<TextureData> textureDataList)
         {
             textureDataList = new List<TextureData>();
-            var depends = EditorUtility.CollectDependencies(new UnityEngine.Object[] { material });
+            var depends = EditorUtility.CollectDependencies(new UnityEngine.Object[] {material});
 
             foreach (var depend in depends)
             {

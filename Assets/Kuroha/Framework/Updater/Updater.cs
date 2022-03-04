@@ -1,6 +1,5 @@
 ﻿using Kuroha.Framework.Message;
 using Kuroha.Framework.Singleton;
-using Kuroha.Util.RunTime;
 using UnityEngine;
 
 namespace Kuroha.Framework.Updater
@@ -31,11 +30,19 @@ namespace Kuroha.Framework.Updater
         #endregion
 
         /// <summary>
+        /// 单例初始化
+        /// </summary>
+        protected override void AutoInit()
+        {
+            base.AutoInit();
+            updateMessage ??= new UpdateMessage(Time.deltaTime);
+        }
+
+        /// <summary>
         /// 帧更新
         /// </summary>
         private void Update()
         {
-            updateMessage ??= new UpdateMessage(Time.deltaTime);
             updateMessage.deltaTime = Time.deltaTime;
             MessageSystem.Instance.Send(updateMessage);
         }
@@ -46,14 +53,12 @@ namespace Kuroha.Framework.Updater
         /// <param name="updater"></param>
         public void Register(IUpdater updater)
         {
-            if (MessageSystem.Instance.AddListener<UpdateMessage>(updater.OnUpdate))
+            if (MessageSystem.Instance.AddListener<UpdateMessage>(updater.UpdateEvent))
             {
                 #if KUROHA_DEBUG_MODE
                 updaterList ??= new System.Collections.Generic.List<string>(5);
                 updaterList.Add(updater.GetType().FullName);
                 #endif
-
-                DebugUtil.Log($"{updateMessage?.deltaTime} 成功注册帧更新事件!");
             }
         }
 
@@ -63,13 +68,11 @@ namespace Kuroha.Framework.Updater
         /// <param name="updater"></param>
         public void Unregister(IUpdater updater)
         {
-            if (MessageSystem.Instance.RemoveListener<UpdateMessage>(updater.OnUpdate))
+            if (MessageSystem.Instance.RemoveListener<UpdateMessage>(updater.UpdateEvent))
             {
                 #if KUROHA_DEBUG_MODE
                 updaterList.Remove(updater.GetType().FullName);
                 #endif
-
-                DebugUtil.Log($"{updateMessage?.deltaTime} 成功注销帧更新事件!");
             }
         }
     }

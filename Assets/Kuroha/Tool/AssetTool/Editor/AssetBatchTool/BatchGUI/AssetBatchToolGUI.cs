@@ -15,6 +15,7 @@ namespace Kuroha.Tool.AssetTool.Editor.AssetBatchTool.BatchGUI
         /// </summary>
         public enum BatchType
         {
+            AssetCollectTool,
             AssetMoveTool,
             AssetDeleteTool,
             UnusedAssetChecker,
@@ -24,7 +25,8 @@ namespace Kuroha.Tool.AssetTool.Editor.AssetBatchTool.BatchGUI
             FbxUVColorsChecker,
             RedundantTextureReferencesCleaner,
             CheckSubEmitterInAllScene,
-            AutoCheckTool = 9
+            SetTextureImportSettings,
+            AutoCheckTool
         }
 
         /// <summary>
@@ -32,6 +34,7 @@ namespace Kuroha.Tool.AssetTool.Editor.AssetBatchTool.BatchGUI
         /// </summary>
         public static readonly string[] batches =
         {
+            "资源收集工具",
             "资源批量移动工具",
             "资源批量删除工具",
             "废弃资源检测工具",
@@ -41,6 +44,7 @@ namespace Kuroha.Tool.AssetTool.Editor.AssetBatchTool.BatchGUI
             "模型 UV 信息检查工具",
             "材质冗余纹理引用清除工具",
             "粒子 Sub-Emitter 检测工具",
+            "批量修改纹理导入设置工具",
             "自动检测工具"
         };
 
@@ -128,6 +132,10 @@ namespace Kuroha.Tool.AssetTool.Editor.AssetBatchTool.BatchGUI
             {
                 switch (currentBatch)
                 {
+                    case BatchType.AssetCollectTool:
+                        AssetCollectTool.OnGUI();
+                        break;
+                    
                     case BatchType.RedundantTextureReferencesCleaner:
                         RedundantTextureReferencesCleaner.OnGUI();
                         break;
@@ -162,6 +170,10 @@ namespace Kuroha.Tool.AssetTool.Editor.AssetBatchTool.BatchGUI
                     
                     case BatchType.AnimationClipCompress:
                         AnimationClipCompress.OnGUI();
+                        break;
+                    
+                    case BatchType.SetTextureImportSettings:
+                        SetTextureImportSettings.OnGUI();
                         break;
 
                     case BatchType.AutoCheckTool:

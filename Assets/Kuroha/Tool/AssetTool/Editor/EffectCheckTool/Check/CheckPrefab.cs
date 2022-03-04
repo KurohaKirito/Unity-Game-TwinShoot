@@ -31,6 +31,7 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Check
             "光照探针",
             "反射探针",
             "动画状态机剔除模式",
+            "LOD渲染层级设置",
         };
 
         /// <summary>
@@ -92,6 +93,11 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Check
             /// 动画状态机
             /// </summary>
             AnimatorCullMode,
+            
+            /// <summary>
+            /// LOD Renderer 设置
+            /// </summary>
+            LODGroupRenderers,
         }
 
         /// <summary>
@@ -200,6 +206,10 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Check
 
                         case CheckOptions.AnimatorCullMode:
                             CheckAnimatorCullMode(assetPath, itemData, ref reportInfos);
+                            break;
+                        
+                        case CheckOptions.LODGroupRenderers:
+                            CheckLODGroupRenderers(assetPath, itemData, ref reportInfos);
                             break;
 
                         default:
@@ -371,30 +381,33 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Check
 
                 if (transform.TryGetComponent<Renderer>(out var renderer))
                 {
-                    if (renderer.sharedMaterials != null)
+                    if (renderer is ParticleSystemRenderer == false)
                     {
-                        foreach (var material in renderer.sharedMaterials)
+                        if (renderer.sharedMaterials != null)
                         {
-                            if (ReferenceEquals(material, null) == false)
+                            foreach (var material in renderer.sharedMaterials)
                             {
-                                TextureUtil.GetTexturesInMaterial(material, out var textureDataList);
-                                foreach (var textureData in textureDataList)
+                                if (ReferenceEquals(material, null) == false)
                                 {
-                                    var textureWidth = textureData.asset.width;
-                                    var textureHeight = textureData.asset.height;
-                                    if (textureWidth > width || textureHeight > height)
+                                    TextureUtil.GetTexturesInMaterial(material, out var textureDataList);
+                                    foreach (var textureData in textureDataList)
                                     {
-                                        var childPath = PrefabUtil.GetHierarchyPath(transform, false);
-                                        var content = $"纹理的尺寸超出限制!\t预制体: {assetPath} 中的子物体 {childPath}, {textureWidth}X{textureHeight} => {width}X{height}";
-                                        report.Add(EffectCheckReport.AddReportInfo(asset, childPath, EffectCheckReportInfo.EffectCheckReportType.PrefabTextureSize, content, item));
+                                        var textureWidth = textureData.asset.width;
+                                        var textureHeight = textureData.asset.height;
+                                        if (textureWidth > width || textureHeight > height)
+                                        {
+                                            var childPath = PrefabUtil.GetHierarchyPath(transform, false);
+                                            var content = $"纹理的尺寸超出限制!\t预制体: {assetPath} 中的子物体 {childPath}, {textureWidth}X{textureHeight} => {width}X{height}";
+                                            report.Add(EffectCheckReport.AddReportInfo(asset, childPath, EffectCheckReportInfo.EffectCheckReportType.PrefabTextureSize, content, item));
+                                        }
                                     }
                                 }
-                            }
-                            else
-                            {
-                                var childPath = PrefabUtil.GetHierarchyPath(transform, false);
-                                var content = $"渲染器引用材质为空!\t预制体: {assetPath} 中的子物体 {childPath} 上引用的 Material 为空!";
-                                report.Add(EffectCheckReport.AddReportInfo(asset, childPath, EffectCheckReportInfo.EffectCheckReportType.PrefabTextureSize, content, item));
+                                else
+                                {
+                                    var childPath = PrefabUtil.GetHierarchyPath(transform, false);
+                                    var content = $"渲染器引用材质为空!\t预制体: {assetPath} 中的子物体 {childPath} 上引用的 Material 为空!";
+                                    report.Add(EffectCheckReport.AddReportInfo(asset, childPath, EffectCheckReportInfo.EffectCheckReportType.PrefabTextureSize, content, item));
+                                }
                             }
                         }
                     }
@@ -489,11 +502,14 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Check
 
                 if (transform.TryGetComponent<Renderer>(out var renderer))
                 {
-                    if (renderer.allowOcclusionWhenDynamic != isOpen)
+                    if (renderer is ParticleSystemRenderer == false)
                     {
-                        var childPath = PrefabUtil.GetHierarchyPath(transform, false);
-                        var content = $"动态遮挡剔除不规范!\t预制体: {assetPath} 子物体: {childPath} : ({!isOpen}) => ({isOpen})!";
-                        report.Add(EffectCheckReport.AddReportInfo(asset, childPath, EffectCheckReportInfo.EffectCheckReportType.PrefabDynamicOcclusion, content, item));
+                        if (renderer.allowOcclusionWhenDynamic != isOpen)
+                        {
+                            var childPath = PrefabUtil.GetHierarchyPath(transform, false);
+                            var content = $"动态遮挡剔除不规范!\t预制体: {assetPath} 子物体: {childPath} : ({!isOpen}) => ({isOpen})!";
+                            report.Add(EffectCheckReport.AddReportInfo(asset, childPath, EffectCheckReportInfo.EffectCheckReportType.PrefabDynamicOcclusion, content, item));
+                        }
                     }
                 }
             }
@@ -759,6 +775,86 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Check
                         var childPath = PrefabUtil.GetHierarchyPath(transform, false);
                         var content = $"动画状态机剔除错误!\t预制体: {assetPath} 子物体: {childPath}: ({animator.cullingMode}) => ({parameter})";
                         report.Add(EffectCheckReport.AddReportInfo(asset, childPath, EffectCheckReportInfo.EffectCheckReportType.PrefabReflectionProbes, content, item));
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 检测: LOD 渲染层级设置
+        /// </summary>
+        private static void CheckLODGroupRenderers(string assetPath, CheckItemInfo item, ref List<EffectCheckReportInfo> report)
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+            if (ReferenceEquals(asset, null))
+            {
+                DebugUtil.Log($"未读取到预制体资源, 路径为: {assetPath}");
+                return;
+            }
+
+            // 得到预制上全部的游戏物体
+            var transforms = asset.GetComponentsInChildren<Transform>(true);
+
+            // 遍历检测
+            foreach (var transform in transforms)
+            {
+                // 正则
+                var pattern = item.objectWhiteRegex;
+                if (string.IsNullOrEmpty(pattern) == false)
+                {
+                    var regex = new Regex(pattern);
+                    if (regex.IsMatch(transform.gameObject.name))
+                    {
+                        continue;
+                    }
+                }
+
+                // 检测
+                if (transform.TryGetComponent<LODGroup>(out var lodGroup))
+                {
+                    var lods = lodGroup.GetLODs();
+                    
+                    // LODs 的层级数不包含 Cull 层, 例如: LOD0 + Cull 的层数为: 1
+                    if (lods[0].renderers == null || lods[0].renderers.Length <= 0)
+                    {
+                        var childPath = PrefabUtil.GetHierarchyPath(transform, false);
+                        if (string.IsNullOrEmpty(childPath))
+                        {
+                            var content = $"LODGroups设置错误!\t预制体: {assetPath}";
+                            report.Add(EffectCheckReport.AddReportInfo(asset, childPath, EffectCheckReportInfo.EffectCheckReportType.PrefabLODGroupRenderers, content, item));
+                        }
+                        else
+                        {
+                            var content = $"LODGroups设置错误!\t预制体: {assetPath} 子物体: {childPath}";
+                            report.Add(EffectCheckReport.AddReportInfo(asset, childPath, EffectCheckReportInfo.EffectCheckReportType.PrefabLODGroupRenderers, content, item));
+                        }
+                    }
+                    else
+                    {
+                        // 检查 LOD0
+                        var isError = false;
+                        foreach (var renderer in lods[0].renderers)
+                        {
+                            if (renderer == null)
+                            {
+                                isError = true;
+                            }
+                        }
+
+                        if (isError)
+                        {
+                            var childPath = PrefabUtil.GetHierarchyPath(transform, false);
+                            if (string.IsNullOrEmpty(childPath))
+                            {
+                                var content = $"LOD0存在空物体!\t预制体: {assetPath}";
+                                report.Add(EffectCheckReport.AddReportInfo(asset, childPath, EffectCheckReportInfo.EffectCheckReportType.PrefabLODGroupRenderers, content, item));
+                            }
+                            else
+                            {
+                                var content = $"LOD0存在空物体!\t预制体: {assetPath} 子物体: {childPath}";
+                                report.Add(EffectCheckReport.AddReportInfo(asset, childPath, EffectCheckReportInfo.EffectCheckReportType.PrefabLODGroupRenderers, content, item));
+                            }
+                        }
                     }
                 }
             }

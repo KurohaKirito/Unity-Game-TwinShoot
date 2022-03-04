@@ -1,43 +1,11 @@
-﻿using UnityEditor;
-
-namespace Kuroha.Util.RunTime
+﻿namespace Kuroha.Util.RunTime
 {
     public static class DebugUtil
     {
         /// <summary>
         /// 日志开关
         /// </summary>
-        private static bool logEnable = true;
-
-        /// <summary>
-        /// 日志开关
-        /// </summary>
-        public static bool LogEnable
-        {
-            get => logEnable;
-            set
-            {
-                if (value)
-                {
-                    logEnable = true;
-                }
-                else
-                {
-                    ClearConsole();
-                    logEnable = false;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 清空控制台
-        /// </summary>
-        public static void ClearConsole()
-        {
-            var dynamicAssembly = new DynamicAssembly(typeof(SceneView));
-            var dynamicClass = dynamicAssembly.GetClass("UnityEditor.LogEntries");
-            dynamicClass.CallMethod_PublicStatic("Clear");
-        }
+        public static bool LogEnable { get; set; } = true;
 
         /// <summary>
         /// 设置颜色

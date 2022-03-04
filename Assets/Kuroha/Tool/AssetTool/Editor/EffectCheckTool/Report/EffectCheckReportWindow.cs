@@ -70,8 +70,24 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Report
         public static void Open(List<EffectCheckReportInfo> results)
         {
             EffectCheckReport.reportInfos = results;
-            var window = GetWindow<EffectCheckReportWindow>("特效检测结果");
-            window.minSize = new Vector2(1000, 650);
+            var window = GetWindow<EffectCheckReportWindow>("资源检查结果");
+            window.minSize = new Vector2(1200, 685);
+        }
+        
+        /// <summary>
+        /// 初始化
+        /// </summary>
+        private void OnEnable()
+        {
+            checkItemGUIStyle = new GUIStyle
+            {
+                fontSize = 13,
+                alignment = TextAnchor.MiddleLeft,
+                normal = new GUIStyleState
+                {
+                    textColor = EditorGUIUtility.isProSkin? Color.white : Color.black
+                }
+            };
         }
 
         /// <summary>
@@ -88,10 +104,10 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Report
             
             var size = UnityEngine.GUI.skin.label.fontSize;
             var alignment = UnityEngine.GUI.skin.label.alignment;
-            UnityEngine.GUI.skin.label.fontSize = 20;
+            UnityEngine.GUI.skin.label.fontSize = 24;
             UnityEngine.GUI.skin.label.alignment = TextAnchor.MiddleCenter;
             UnityEngine.GUI.skin.label.normal.textColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
-            GUILayout.Label($"待修复问题: {EffectCheckReport.reportInfos.Count} 个");
+            GUILayout.Label($"Check Result Count : {EffectCheckReport.reportInfos.Count}");
             UnityEngine.GUI.skin.label.fontSize = size;
             UnityEngine.GUI.skin.label.alignment = alignment;
             
@@ -101,8 +117,7 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Report
 
             var selectAllStr = isSelectAll ? "全不选" : "全选";
             UnityEngine.GUI.enabled = EffectCheckReport.reportInfos.Count > 0;
-            if (GUILayout.Button(selectAllStr, GUILayout.Width(UI_BUTTON_WIDTH),
-                GUILayout.Height(UI_BUTTON_HEIGHT)))
+            if (GUILayout.Button(selectAllStr, GUILayout.Width(UI_BUTTON_WIDTH), GUILayout.Height(UI_BUTTON_HEIGHT)))
             {
                 isSelectAll = !isSelectAll;
                 foreach (var reportInfo in EffectCheckReport.reportInfos)
@@ -150,22 +165,6 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Report
 
             #endregion
         }
-        
-        /// <summary>
-        /// 初始化
-        /// </summary>
-        private void OnEnable()
-        {
-            checkItemGUIStyle = new GUIStyle
-            {
-                fontSize = 16,
-                alignment = TextAnchor.MiddleLeft,
-                normal = new GUIStyleState
-                {
-                    textColor = EditorGUIUtility.isProSkin? Color.white : Color.black
-                }
-            };
-        }
 
         /// <summary>
         /// 计算得出可以自动修复的问题的数量
@@ -190,41 +189,43 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.Report
         /// <param name="effectCheckReportInfo">待显示问题项</param>
         private static void OnGUI_ShowItemReport(EffectCheckReportInfo effectCheckReportInfo)
         {
+            // 留白
             GUILayout.Space(2 * UI_DEFAULT_MARGIN);
 
             // 勾选框
             effectCheckReportInfo.isEnable = EditorGUILayout.Toggle(effectCheckReportInfo.isEnable, GUILayout.Height(UI_BUTTON_HEIGHT), GUILayout.Width(UI_BUTTON_HEIGHT));
 
+            // 定位按钮
+            var isSelectable = ReferenceEquals(effectCheckReportInfo.asset, null) == false;
+            UnityEngine.GUI.enabled = isSelectable;
+            if (GUILayout.Button("定位", GUILayout.Height(UI_BUTTON_HEIGHT), GUILayout.Width(UI_BUTTON_WIDTH / 2))) {
+                EffectCheckReport.Ping(effectCheckReportInfo);
+            }
+            UnityEngine.GUI.enabled = true;
+            
+            // 修复按钮
+            var isRepairable = EffectCheckReport.RepairOrSelect(effectCheckReportInfo.effectCheckReportType);
+            UnityEngine.GUI.enabled = isRepairable;
+            if (GUILayout.Button("修复", GUILayout.Height(UI_BUTTON_HEIGHT), GUILayout.Width(UI_BUTTON_WIDTH / 2))) {
+                EffectCheckReport.Repair(effectCheckReportInfo);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            }
+            UnityEngine.GUI.enabled = true;
+            
+            // 留白
+            GUILayout.Space(2 * UI_DEFAULT_MARGIN);
+            
             // 危险等级
-            UnityEngine.GUI.skin.label.normal.textColor = effectCheckReportInfo.dangerLevel == 0 ? Color.yellow : Color.red;
+            checkItemGUIStyle.normal.textColor = effectCheckReportInfo.dangerLevel == 0 ? Color.yellow : Color.red;
             EditorGUILayout.SelectableLabel(EffectCheckItemSetView.dangerLevelOptions[effectCheckReportInfo.dangerLevel], checkItemGUIStyle, GUILayout.Height(UI_BUTTON_HEIGHT), GUILayout.Width(40));
-            UnityEngine.GUI.skin.label.normal.textColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
+            checkItemGUIStyle.normal.textColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
 
             // 错误信息
             EditorGUILayout.SelectableLabel(effectCheckReportInfo.content, checkItemGUIStyle, GUILayout.Height(UI_BUTTON_HEIGHT), GUILayout.Width(1600));
 
+            // 填满留白
             GUILayout.FlexibleSpace();
-
-            if (ReferenceEquals(effectCheckReportInfo.asset, null) == false)
-            {
-                // 判断是否支持自动修复
-                var isCanRepair = EffectCheckReport.RepairOrSelect(effectCheckReportInfo.effectCheckReportType);
-
-                if (isCanRepair)
-                {
-                    if (GUILayout.Button("修复", GUILayout.Height(UI_BUTTON_HEIGHT), GUILayout.Width(UI_BUTTON_WIDTH / 2)))
-                    {
-                        EffectCheckReport.Repair(effectCheckReportInfo);
-                        AssetDatabase.SaveAssets();
-                        AssetDatabase.Refresh();
-                    }
-                }
-
-                if (GUILayout.Button("选中", GUILayout.Height(UI_BUTTON_HEIGHT), GUILayout.Width(UI_BUTTON_WIDTH / 2)))
-                {
-                    EffectCheckReport.Ping(effectCheckReportInfo);
-                }
-            }
         }
     }
 }

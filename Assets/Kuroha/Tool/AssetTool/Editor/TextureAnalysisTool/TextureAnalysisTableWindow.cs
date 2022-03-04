@@ -13,10 +13,10 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
 {
     public class TextureAnalysisTableWindow : EditorWindow
     {
+        /// <summary>
+        /// 表格
+        /// </summary>
         private TextureAnalysisTable table;
-
-        private GUIStyle fontStyleRed;
-        private GUIStyle fontStyleYellow;
 
         /// <summary>
         /// 宽度警告线
@@ -92,21 +92,49 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
                 heightError = 1000;
             }
 
-            // 初始化字体风格
-            fontStyleRed = new GUIStyle
-            {
-                alignment = TextAnchor.MiddleLeft,
-                normal = { textColor = new Color((float)203 / 255, (float)27 / 255, (float)69 / 255) }
-            };
-
-            fontStyleYellow = new GUIStyle
-            {
-                alignment = TextAnchor.MiddleLeft,
-                normal = { textColor = new Color((float)226 / 255, (float)148 / 255, (float)59 / 255) }
-            };
-
             // 初始化表格
             InitTable();
+        }
+
+        /// <summary>
+        /// 绘制界面
+        /// </summary>
+        protected void OnGUI()
+        {
+            GUILayout.Space(20);
+            GUILayout.BeginHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(20);
+            GUILayout.BeginVertical("Box");
+            widthWarn = EditorGUILayout.IntField("Enter Width Warning Line", widthWarn, GUILayout.Width(200));
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(20);
+            GUILayout.BeginVertical("Box");
+            widthError = EditorGUILayout.IntField("Enter Width Error Line", widthError, GUILayout.Width(200));
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(20);
+            GUILayout.BeginVertical("Box");
+            heightWarn = EditorGUILayout.IntField("Enter Height Warning Line", heightWarn, GUILayout.Width(200));
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(20);
+            GUILayout.BeginVertical("Box");
+            heightError = EditorGUILayout.IntField("Enter Tris Error Line", heightError, GUILayout.Width(200));
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+
+            GUILayout.EndHorizontal();
+
+            table?.OnGUI();
         }
 
         /// <summary>
@@ -125,8 +153,7 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
                     {
                         var space = new Vector2(20, 20);
                         var min = new Vector2(300, 300);
-                        table = new TextureAnalysisTable(space, min, dataList, true, true, 50, 50, columns,
-                            OnFilterEnter, OnExportPressed, OnRowSelect);
+                        table = new TextureAnalysisTable(space, min, dataList, true, true, true, columns, OnFilterEnter, OnExportPressed, OnRowSelect, OnDistinctPressed);
                     }
                 }
             }
@@ -149,15 +176,13 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
             {
                 ProgressBar.DisplayProgressBar("纹理分析工具", $"纹理检测中: {index + 1}/{textures.Count}", index + 1, textures.Count);
 
-                // 判断后缀
-                if (paths[index].EndsWith(".png") || paths[index].EndsWith(".tga"))
-                {
-                    DetectTexture(ref counter, in dataList, paths[index], textures[index]);
-                }
-                else
+                if (paths[index].EndsWith(".png") == false && paths[index].EndsWith(".tga") == false)
                 {
                     DebugUtil.Log($"文件后缀非法: {paths[index]}", AssetDatabase.LoadAssetAtPath<Texture>(paths[index]));
                 }
+
+                // 执行检测
+                DetectTexture(ref counter, in dataList, paths[index], textures[index]);
             }
 
             DebugUtil.Log($"共检测了 {counter} 张贴图");
@@ -204,7 +229,7 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
                     break;
 
                 case TextureAnalysisData.DetectType.Path:
-                    TextureUtil.GetTexturesInPath(new[] { texturesPath }, out assets, out assetPaths);
+                    TextureUtil.GetTexturesInPath(new[] {texturesPath}, out assets, out assetPaths);
                     break;
 
                 case TextureAnalysisData.DetectType.GameObject:
@@ -225,6 +250,7 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
         /// <param name="asset">贴图资源</param>
         private static void DetectTexture(ref int counter, in List<TextureAnalysisData> dataList, in string assetPath, in Texture asset)
         {
+            // 去重
             var isHad = false;
             foreach (var data in dataList)
             {
@@ -233,7 +259,6 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
                     isHad = true;
                 }
             }
-
             if (isHad)
             {
                 return;
@@ -241,22 +266,31 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
 
             // 计数
             counter++;
-
-            // 纯色纹理判断
+            
+            // 判断是否可以进行纯色与重复的检测
             var isSolid = false;
-            var textureImporter = (TextureImporter)AssetImporter.GetAtPath(assetPath);
-            if (!ReferenceEquals(textureImporter, null))
+            if (assetPath.IndexOf(".png", StringComparison.OrdinalIgnoreCase) < 0 && assetPath.IndexOf(".tga", StringComparison.OrdinalIgnoreCase) < 0 &&
+                assetPath.IndexOf(".psd", StringComparison.OrdinalIgnoreCase) < 0 && assetPath.IndexOf(".tif", StringComparison.OrdinalIgnoreCase) < 0)
             {
-                if (textureImporter.textureShape == TextureImporterShape.Texture2D && TextureUtil.IsSolidColor(asset))
-                {
-                    isSolid = true;
-                }
+                Debug.LogError($"文件类型非法, 无法进行纯色以及重复检查: {assetPath}");
             }
+            else
+            {
+                // 纯色纹理判断
+                var textureImporter = (TextureImporter) AssetImporter.GetAtPath(assetPath);
+                if (ReferenceEquals(textureImporter, null) == false)
+                {
+                    if (textureImporter.textureShape == TextureImporterShape.Texture2D && TextureUtil.IsSolidColor(asset))
+                    {
+                        isSolid = true;
+                    }
+                }
 
-            // 重复纹理检测
-            var isBegin = counter == 1;
-            TextureRepeatChecker.CheckOneTexture(assetPath, isBegin);
-
+                // 重复纹理检测
+                var isBegin = counter == 1;
+                TextureRepeatChecker.CheckOneTexture(assetPath, isBegin);
+            }
+            
             // 汇总数据
             dataList.Add(new TextureAnalysisData
             {
@@ -273,11 +307,11 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
         /// 初始化列
         /// </summary>
         /// <returns></returns>
-        private CommonTableColumn<TextureAnalysisData>[] InitColumns()
+        private static CustomTableColumn<TextureAnalysisData>[] InitColumns()
         {
             return new[]
             {
-                new CommonTableColumn<TextureAnalysisData>
+                new CustomTableColumn<TextureAnalysisData>
                 {
                     headerContent = new GUIContent("ID"),
                     headerTextAlignment = TextAlignment.Center,
@@ -296,7 +330,7 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
                         EditorGUI.LabelField(cellRect, data.id.ToString());
                     }
                 },
-                new CommonTableColumn<TextureAnalysisData>
+                new CustomTableColumn<TextureAnalysisData>
                 {
                     headerContent = new GUIContent("Name"),
                     headerTextAlignment = TextAlignment.Center,
@@ -315,13 +349,13 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
                         iconRect.width = 20f;
                         cellRect.xMin += 20f;
 
-                        EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("RawImage Icon"));
+                        EditorGUI.LabelField(iconRect, new GUIContent(AssetDatabase.GetCachedIcon(data.texturePath)));
                         EditorGUI.LabelField(cellRect, data.textureName.Contains("/")
                             ? data.textureName.Split('/').Last()
                             : data.textureName.Split('\\').Last());
                     }
                 },
-                new CommonTableColumn<TextureAnalysisData>
+                new CustomTableColumn<TextureAnalysisData>
                 {
                     headerContent = new GUIContent("Width"),
                     headerTextAlignment = TextAlignment.Center,
@@ -342,22 +376,22 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
 
                         if (data.width > widthError)
                         {
-                            EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("console.erroricon.sml"));
-                            EditorGUI.LabelField(cellRect, data.width.ToString(), fontStyleRed);
+                            EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("console.errorIcon.sml"));
+                            EditorGUI.LabelField(cellRect, data.width.ToString());
                         }
                         else if (data.width > widthWarn)
                         {
-                            EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("console.warnicon.sml"));
-                            EditorGUI.LabelField(cellRect, data.width.ToString(), fontStyleYellow);
+                            EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("console.warnIcon.sml"));
+                            EditorGUI.LabelField(cellRect, data.width.ToString());
                         }
                         else
                         {
-                            EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("console.infoicon.sml"));
+                            EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("console.infoIcon.sml"));
                             EditorGUI.LabelField(cellRect, data.width.ToString());
                         }
                     }
                 },
-                new CommonTableColumn<TextureAnalysisData>
+                new CustomTableColumn<TextureAnalysisData>
                 {
                     headerContent = new GUIContent("Height"),
                     headerTextAlignment = TextAlignment.Center,
@@ -378,22 +412,22 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
 
                         if (data.height > heightError)
                         {
-                            EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("console.erroricon.sml"));
-                            EditorGUI.LabelField(cellRect, data.height.ToString(), fontStyleRed);
+                            EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("console.errorIcon.sml"));
+                            EditorGUI.LabelField(cellRect, data.height.ToString());
                         }
                         else if (data.height > heightWarn)
                         {
-                            EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("console.warnicon.sml"));
-                            EditorGUI.LabelField(cellRect, data.height.ToString(), fontStyleYellow);
+                            EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("console.warnIcon.sml"));
+                            EditorGUI.LabelField(cellRect, data.height.ToString());
                         }
                         else
                         {
-                            EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("console.infoicon.sml"));
+                            EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("console.infoIcon.sml"));
                             EditorGUI.LabelField(cellRect, data.height.ToString());
                         }
                     }
                 },
-                new CommonTableColumn<TextureAnalysisData>
+                new CustomTableColumn<TextureAnalysisData>
                 {
                     headerContent = new GUIContent("Solid"),
                     headerTextAlignment = TextAlignment.Center,
@@ -414,12 +448,20 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
 
                         if (data.isSolid)
                         {
-                            EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("d_FilterSelectedOnly"));
-                            EditorGUI.LabelField(cellRect, "纯色纹理", fontStyleRed);
+                            if (data.width > 32 && data.height > 32)
+                            {
+                                EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("console.errorIcon.sml"));
+                            }
+                            else
+                            {
+                                EditorGUI.LabelField(iconRect, EditorGUIUtility.IconContent("d_FilterSelectedOnly"));
+                            }
+
+                            UnityEngine.GUI.Label(cellRect, "纯色纹理");
                         }
                     }
                 },
-                new CommonTableColumn<TextureAnalysisData>
+                new CustomTableColumn<TextureAnalysisData>
                 {
                     headerContent = new GUIContent("Repeat"),
                     headerTextAlignment = TextAlignment.Center,
@@ -442,47 +484,6 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
                     }
                 }
             };
-        }
-
-        /// <summary>
-        /// 绘制界面
-        /// </summary>
-        protected void OnGUI()
-        {
-            GUILayout.Space(20);
-            GUILayout.BeginHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(20);
-            GUILayout.BeginVertical("Box");
-            widthWarn = EditorGUILayout.IntField("Enter Width Warning Line", widthWarn, GUILayout.Width(200));
-            GUILayout.EndVertical();
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(20);
-            GUILayout.BeginVertical("Box");
-            widthError = EditorGUILayout.IntField("Enter Width Error Line", widthError, GUILayout.Width(200));
-            GUILayout.EndVertical();
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(20);
-            GUILayout.BeginVertical("Box");
-            heightWarn = EditorGUILayout.IntField("Enter Height Warning Line", heightWarn, GUILayout.Width(200));
-            GUILayout.EndVertical();
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(20);
-            GUILayout.BeginVertical("Box");
-            heightError = EditorGUILayout.IntField("Enter Tris Error Line", heightError, GUILayout.Width(200));
-            GUILayout.EndVertical();
-            GUILayout.EndHorizontal();
-
-            GUILayout.EndHorizontal();
-
-            table?.OnGUI();
         }
 
         /// <summary>
@@ -631,6 +632,29 @@ namespace Kuroha.Tool.AssetTool.Editor.TextureAnalysisTool
             #endregion
 
             return isMatched;
+        }
+
+        /// <summary>
+        /// 数据去重事件
+        /// </summary>
+        private static void OnDistinctPressed(ref List<TextureAnalysisData> dataList)
+        {
+            var newList = new List<TextureAnalysisData>();
+            foreach (var data in dataList)
+            {
+                if (newList.Exists(analysisData => analysisData.Equal(data)) == false)
+                {
+                    newList.Add(data);
+                }
+            }
+
+            dataList = newList;
+
+            // 重新编号
+            for (var index = 0; index < dataList.Count; ++index)
+            {
+                dataList[index].id = index + 1;
+            }
         }
     }
 }

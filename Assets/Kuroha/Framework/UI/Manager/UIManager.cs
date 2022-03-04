@@ -45,7 +45,7 @@ namespace Kuroha.Framework.UI.Manager
         /// <summary>
         /// UI 帧更新事件
         /// </summary>
-        private event Action UpdateEvent;
+        private event Action UIUpdateEvent;
 
         /// <summary>
         /// UI 帧更新事件列表
@@ -55,7 +55,7 @@ namespace Kuroha.Framework.UI.Manager
         /// <summary>
         /// 单例
         /// </summary>
-        protected sealed override void Init()
+        protected sealed override void AutoInit()
         {
             if (MainCamera == null || Panel == null || Window == null)
             {
@@ -72,29 +72,29 @@ namespace Kuroha.Framework.UI.Manager
         /// <summary>
         /// 帧更新
         /// </summary>
-        public bool OnUpdate(BaseMessage message)
+        public bool UpdateEvent(BaseMessage message)
         {
-            UpdateEvent?.Invoke();
+            UIUpdateEvent?.Invoke();
             return false;
         }
 
         /// <summary>
         /// 添加监听
         /// </summary>
-        public void AddUpdateListener(Action action, string methodName)
+        public void AddUpdateListener(Action action)
         {
-            eventNameList.Add(methodName);
-            UpdateEvent += action;
+            eventNameList.Add($"{action.Method.DeclaringType}.{action.Method.Name}()");
+            UIUpdateEvent += action;
             Updater.Updater.Instance.Register(this);
         }
 
         /// <summary>
         /// 移除监听
         /// </summary>
-        public void RemoveUpdateListener(Action action, string methodName)
+        public void RemoveUpdateListener(Action action)
         {
-            eventNameList.Remove(methodName);
-            UpdateEvent -= action;
+            eventNameList.Remove($"{action.Method.DeclaringType}.{action.Method.Name}()");
+            UIUpdateEvent -= action;
             Updater.Updater.Instance.Unregister(this);
         }
     }

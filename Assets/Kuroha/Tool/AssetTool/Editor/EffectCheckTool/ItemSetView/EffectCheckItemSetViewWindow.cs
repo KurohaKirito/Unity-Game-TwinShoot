@@ -96,8 +96,8 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.ItemSetView
             itemInfo = info;
             isEditMode = info != null;
             EffectCheckItemViewWindow.isRefresh = true;
-            var window = GetWindow<EffectCheckItemSetViewWindow>("特效检查项设置");
-            window.minSize = new Vector2(500, 470);
+            var window = GetWindow<EffectCheckItemSetViewWindow>("检查项设置");
+            window.minSize = new Vector2(500, 490);
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.ItemSetView
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label("检查项设置", titleStyle);
+            GUILayout.Label("Check Item Set", titleStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -321,6 +321,7 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.ItemSetView
         private static void OnGUI_CheckTexture()
         {
             var modeType = (CheckTexture.CheckOptions)itemInfo.checkType;
+            var oldAlignment = UnityEngine.GUI.skin.label.alignment;
 
             switch (modeType)
             {
@@ -338,6 +339,12 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.ItemSetView
                 case CheckTexture.CheckOptions.MipMaps:
                     ParameterBool1 = EditorGUILayout.Toggle("开启 Mip Maps", ParameterBool1);
                     itemInfo.parameter = $"{ParameterBool1}";
+                    break;
+                
+                case CheckTexture.CheckOptions.CompressFormat:
+                    UnityEngine.GUI.skin.label.alignment = TextAnchor.MiddleLeft;
+                    GUILayout.Label("描述: Android => ETC2; iOS => PVRTC");
+                    UnityEngine.GUI.skin.label.alignment = oldAlignment;
                     break;
 
                 default:
@@ -442,6 +449,13 @@ namespace Kuroha.Tool.AssetTool.Editor.EffectCheckTool.ItemSetView
                     ParameterInt1 = EditorGUILayout.Popup("Animator Cull Mode: ", ParameterInt1, CheckPrefab.animatorCullModeOptions);
                     itemInfo.parameter = ParameterInt1.ToString();
                     break;
+                
+                case CheckPrefab.CheckOptions.LODGroupRenderers:
+                    UnityEngine.GUI.skin.label.alignment = TextAnchor.MiddleLeft;
+                    GUILayout.Label("描述: LODGroup 只有 LOD0 时, LOD0 不能为空!");
+                    UnityEngine.GUI.skin.label.alignment = oldAlignment;
+                    break;
+                
                 default:
                     throw new ArgumentOutOfRangeException();
             }

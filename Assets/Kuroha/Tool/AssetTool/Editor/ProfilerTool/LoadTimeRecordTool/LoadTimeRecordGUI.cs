@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Kuroha.Tool.AssetTool.Editor.ProfilerTool.AsyncLoadTool
+namespace Kuroha.Tool.AssetTool.Editor.ProfilerTool.LoadTimeRecordTool
 {
     public static class LoadTimeRecordGUI
     {
@@ -45,7 +45,7 @@ namespace Kuroha.Tool.AssetTool.Editor.ProfilerTool.AsyncLoadTool
                 GUILayout.Space(UI_DEFAULT_MARGIN);
                 GUILayout.BeginVertical("Box");
                 {
-                    EditorGUILayout.LabelField("1. 请选择从真机导出的异步加载时长统计文件.");
+                    EditorGUILayout.LabelField("1. 请选择从真机导出的同步加载时长统计文件.");
                     
                     GUILayout.Space(UI_DEFAULT_MARGIN);
                 

@@ -43,18 +43,18 @@ namespace Kuroha.Framework.Audio
         private AudioClipManager audioClipManager;
 
         /// <summary>
-        /// [Async] 初始化
+        /// 初始化
         /// </summary>
-        public sealed override async Task InitAsync()
+        public override async Task InitAsync()
         {
             if (audioClipManager == null || audioSourceManager == null)
             {
                 audioSourceManager ??= new AudioSourceManager(gameObject);
                 audioClipManager ??= new AudioClipManager();
-                await audioClipManager.OnInit();
+                await audioClipManager.InitAsync();
             }
         }
-        
+
         /// <summary>
         /// 播放
         /// </summary>
